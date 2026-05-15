@@ -43,6 +43,10 @@ export default function CompartirPage() {
   return (
     <div className="min-h-screen bg-blue-50 p-6 text-black flex flex-col items-center">
 
+      <h1 className="text-2xl font-bold mb-4">
+        Compartir / Instalar App
+      </h1>
+
       {/* INFO ANDROID */}
       <div className="bg-white p-4 rounded-xl shadow mb-4 w-full max-w-md">
         <h2 className="font-bold text-lg mb-2">
