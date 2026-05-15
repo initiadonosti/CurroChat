@@ -200,7 +200,7 @@ export default function ChatPage() {
 Te invito a usar MiChatApp para comunicarte conmigo.
 
 Descarga o abre la app aquí:
-https://tuweb.com
+https://mi-chat-app-nu.vercel.app/
 
 ¡Nos vemos dentro!`
   );
@@ -262,6 +262,12 @@ https://tuweb.com
     router.push("/perfil");
   };
 
+  const irCompartir = () => {
+  setMenuAbierto(false);
+
+  router.push("/compartir");
+};
+
   const irMensajes = () => {
     setMenuAbierto(false);
     router.push("/guardados");
@@ -320,6 +326,13 @@ https://tuweb.com
               className="w-full text-left px-4 py-3 hover:bg-gray-100"
             >
               Perfil
+            </button>
+            
+            <button
+              onClick={irCompartir}
+              className="w-full text-left px-4 py-3 hover:bg-gray-100"
+            >
+              Compartir / Instalar app
             </button>
 
             <button
