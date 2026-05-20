@@ -115,42 +115,41 @@ export default function ChatPage() {
     );
   };
 
-  // 🔥 AQUÍ ESTÁ LA CORRECCIÓN IMPORTANTE
   const buscarUsuario = async () => {
-    const texto = busqueda.trim().toLowerCase();
-    if (!texto) return;
+  const texto = busqueda.trim().toLowerCase();
+  if (!texto) return;
 
-    const snapshot = await get(ref(db, "usuarios"));
+  const snapshot = await get(ref(db, "usuarios"));
 
-    let encontrado: Usuario | null = null;
+  let encontrado: Usuario | null = null;
 
-    snapshot.forEach((child) => {
-      const data = child.val();
+  snapshot.forEach((child) => {
+    const data = child.val();
 
-      const nombre = (data.nombre || "").toLowerCase().trim();
+    const nombre = (data.nombre || "").toLowerCase().trim();
 
-      if (child.key !== uid && nombre === texto) {
-        encontrado = {
-          uid: child.key!,
-          nombre: data.nombre,
-          fotoUrl: data.fotoUrl,
-          horaInicio: data.horaInicio,
-          horaFinal: data.horaFinal,
-        };
-      }
-    });
+    if (child.key !== uid && nombre === texto) {
+      encontrado = {
+        uid: child.key!,
+        nombre: data.nombre,
+        fotoUrl: data.fotoUrl,
+        horaInicio: data.horaInicio,
+        horaFinal: data.horaFinal,
+      };
+    }
+  });
 
-    // ❌ NO encontrado → invitación
-    if (!encontrado) {
-      const email = prompt(
-        "Usuario no encontrado.\n\nIntroduce un correo para enviar invitación:"
-      );
+  
+  if (!encontrado) {
+    const email = prompt(
+      "Usuario no encontrado.\n\nIntroduce un correo para enviar invitación:"
+    );
 
-      if (!email) return;
+    if (!email) return;
 
-      const asunto = encodeURIComponent("Invitación a MiChatApp");
+    const asunto = encodeURIComponent("Invitación a MiChatApp");
 
-      const mensaje = encodeURIComponent(`
+    const mensaje = encodeURIComponent(`
 Hola,
 
 Te invito a usar MiChatApp para comunicarte conmigo.
@@ -160,26 +159,28 @@ https://curro-chat-nu.vercel.app/
 ¡Nos vemos dentro!
 `);
 
-      window.open(
-        `mailto:${email}?subject=${asunto}&body=${mensaje}`,
-        "_self"
-      );
+    window.open(
+      `mailto:${email}?subject=${asunto}&body=${mensaje}`,
+      "_self"
+    );
 
-      return;
-    }
+    return;
+  }
 
-    // ya existe
-    if (usuarios.find((u) => u.uid === encontrado.uid)) {
-      alert("Ya existe");
-      return;
-    }
+  // 👇 FIX DE TYPESCRIPT (IMPORTANTE)
+  const existe = usuarios.some((u) => u.uid === encontrado!.uid);
 
-    const nueva = [...usuarios, encontrado];
+  if (existe) {
+    alert("Ya existe");
+    return;
+  }
 
-    setUsuarios(nueva);
-    guardarContactos(nueva);
-    setBusqueda("");
-  };
+  const nueva = [...usuarios, encontrado!];
+
+  setUsuarios(nueva);
+  guardarContactos(nueva);
+  setBusqueda("");
+};
 
   const logout = async () => {
     await signOut(auth);
