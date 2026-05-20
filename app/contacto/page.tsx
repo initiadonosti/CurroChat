@@ -200,7 +200,7 @@ export default function ChatPage() {
 Te invito a usar MiChatApp para comunicarte conmigo.
 
 Descarga o abre la app aquí:
-https://mi-chat-app-nu.vercel.app/
+https://curro-chat-nu.vercel.app/
 
 ¡Nos vemos dentro!`
   );
