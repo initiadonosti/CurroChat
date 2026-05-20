@@ -12,9 +12,6 @@ type Usuario = {
   fotoUrl?: string;
   horaInicio?: string;
   horaFinal?: string;
-  vacacionesInicio?: string;
-  vacacionesFinal?: string;
-  estaDeVacaciones?: boolean;
 };
 
 export default function ChatPage() {
@@ -28,6 +25,7 @@ export default function ChatPage() {
 
   const CONTACTOS_KEY = `CONTACTOS_GUARDADOS_${uid}`;
 
+  // 🔹 Imagen helper
   const obtenerImagen = (foto?: string) => {
     if (!foto) return null;
     if (foto.startsWith("/9j/") || foto.length > 100) {
@@ -36,8 +34,10 @@ export default function ChatPage() {
     return foto;
   };
 
+  // 🔹 INIT
   useEffect(() => {
     const user = auth.currentUser;
+
     if (!user) {
       router.push("/");
       return;
@@ -47,15 +47,7 @@ export default function ChatPage() {
     cargarContactos(user.uid);
   }, []);
 
-  const parseFecha = (fechaStr: string) => {
-    const partes = fechaStr.split("/");
-    return new Date(
-      parseInt(partes[2]),
-      parseInt(partes[1]) - 1,
-      parseInt(partes[0])
-    );
-  };
-
+  // 🔹 Usuario actual
   const cargarUsuario = async (uid: string) => {
     const snapshot = await get(ref(db, `usuarios/${uid}`));
 
@@ -67,6 +59,7 @@ export default function ChatPage() {
     }
   };
 
+  // 🔹 Contactos guardados
   const cargarContactos = async (uid: string) => {
     const json = localStorage.getItem(CONTACTOS_KEY);
     if (!json) return;
@@ -80,27 +73,12 @@ export default function ChatPage() {
       if (snap.exists()) {
         const data = snap.val();
 
-        let estaDeVacaciones = false;
-
-        if (data.vacacionesInicio && data.vacacionesFinal) {
-          const hoy = new Date();
-          const inicio = parseFecha(data.vacacionesInicio);
-          const fin = parseFecha(data.vacacionesFinal);
-
-          if (hoy >= inicio && hoy <= fin) {
-            estaDeVacaciones = true;
-          }
-        }
-
         lista.push({
           uid: c.uid,
           nombre: data.nombre,
           fotoUrl: data.fotoUrl,
           horaInicio: data.horaInicio || "08:00",
           horaFinal: data.horaFinal || "17:00",
-          vacacionesInicio: data.vacacionesInicio,
-          vacacionesFinal: data.vacacionesFinal,
-          estaDeVacaciones,
         });
       }
     }
@@ -108,6 +86,7 @@ export default function ChatPage() {
     setUsuarios(lista);
   };
 
+  // 🔹 Guardar contactos
   const guardarContactos = (lista: Usuario[]) => {
     localStorage.setItem(
       CONTACTOS_KEY,
@@ -115,41 +94,42 @@ export default function ChatPage() {
     );
   };
 
+  // 🔥 BÚSQUEDA ARREGLADA (SIN FIREBASE QUERY PROBLEMÁTICO)
   const buscarUsuario = async () => {
-  const texto = busqueda.trim().toLowerCase();
-  if (!texto) return;
+    const texto = busqueda.trim().toLowerCase();
+    if (!texto) return;
 
-  const snapshot = await get(ref(db, "usuarios"));
+    const snapshot = await get(ref(db, "usuarios"));
 
-  let encontrado: Usuario | null = null;
+    let encontrado: Usuario | null = null;
 
-  snapshot.forEach((child) => {
-    const data = child.val();
+    snapshot.forEach((child) => {
+      const data = child.val();
 
-    const nombre = (data.nombre || "").toLowerCase().trim();
+      const nombre = (data.nombre || "").toLowerCase().trim();
 
-    if (child.key !== uid && nombre === texto) {
-      encontrado = {
-        uid: child.key!,
-        nombre: data.nombre,
-        fotoUrl: data.fotoUrl,
-        horaInicio: data.horaInicio,
-        horaFinal: data.horaFinal,
-      };
-    }
-  });
+      if (child.key !== uid && nombre === texto) {
+        encontrado = {
+          uid: child.key!,
+          nombre: data.nombre,
+          fotoUrl: data.fotoUrl,
+          horaInicio: data.horaInicio,
+          horaFinal: data.horaFinal,
+        };
+      }
+    });
 
-  
-  if (!encontrado) {
-    const email = prompt(
-      "Usuario no encontrado.\n\nIntroduce un correo para enviar invitación:"
-    );
+    // ❌ NO encontrado → invitación
+    if (!encontrado) {
+      const email = prompt(
+        "Usuario no encontrado.\n\nIntroduce un correo para enviar invitación:"
+      );
 
-    if (!email) return;
+      if (!email) return;
 
-    const asunto = encodeURIComponent("Invitación a MiChatApp");
+      const asunto = encodeURIComponent("Invitación a MiChatApp");
 
-    const mensaje = encodeURIComponent(`
+      const mensaje = encodeURIComponent(`
 Hola,
 
 Te invito a usar MiChatApp para comunicarte conmigo.
@@ -159,47 +139,95 @@ https://curro-chat-nu.vercel.app/
 ¡Nos vemos dentro!
 `);
 
-    window.open(
-      `mailto:${email}?subject=${asunto}&body=${mensaje}`,
-      "_self"
-    );
+      window.open(
+        `mailto:${email}?subject=${asunto}&body=${mensaje}`,
+        "_self"
+      );
 
-    return;
-  }
+      return;
+    }
 
-  // 👇 FIX DE TYPESCRIPT (IMPORTANTE)
-  const existe = usuarios.some((u) => u.uid === encontrado!.uid);
+    // ✔ ya existe
+    const existe = usuarios.some((u) => u.uid === encontrado!.uid);
 
-  if (existe) {
-    alert("Ya existe");
-    return;
-  }
+    if (existe) {
+      alert("Ya existe");
+      return;
+    }
 
-  const nueva = [...usuarios, encontrado!];
+    const nueva = [...usuarios, encontrado!];
 
-  setUsuarios(nueva);
-  guardarContactos(nueva);
-  setBusqueda("");
-};
+    setUsuarios(nueva);
+    guardarContactos(nueva);
+    setBusqueda("");
+  };
 
+  // 🔹 Logout
   const logout = async () => {
     await signOut(auth);
     router.push("/");
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 p-4">
+    <div className="min-h-screen bg-blue-50 p-4 relative">
 
       {/* HEADER */}
-      <div className="flex justify-between items-center bg-blue-700 text-white p-4 rounded-xl mb-4">
+      <div className="flex justify-between items-center bg-blue-700 text-white p-4 rounded-xl mb-4 relative">
+        
         <div>
           <p className="text-sm">Usuario:</p>
           <p className="font-bold">{usuarioActual?.nombre}</p>
         </div>
 
-        <button onClick={() => setMenuAbierto(!menuAbierto)}>
+        {/* HAMBURGUESA */}
+        <button
+          onClick={() => setMenuAbierto(!menuAbierto)}
+          className="text-2xl"
+        >
           ☰
         </button>
+
+        {/* MENU DROPDOWN */}
+        {menuAbierto && (
+          <div className="absolute right-4 top-16 bg-white text-black rounded-xl shadow-lg w-56 overflow-hidden z-50">
+
+            <button
+              onClick={() => router.push("/guardados")}
+              className="w-full text-left px-4 py-3 hover:bg-gray-100"
+            >
+              Mensajes guardados
+            </button>
+
+            <button
+              onClick={() => router.push("/perfil")}
+              className="w-full text-left px-4 py-3 hover:bg-gray-100"
+            >
+              Perfil
+            </button>
+
+            <button
+              onClick={() => router.push("/compartir")}
+              className="w-full text-left px-4 py-3 hover:bg-gray-100"
+            >
+              Compartir / Instalar app
+            </button>
+
+            <button
+              onClick={() => router.push("/politica")}
+              className="w-full text-left px-4 py-3 hover:bg-gray-100"
+            >
+              Política de privacidad
+            </button>
+
+            <button
+              onClick={logout}
+              className="w-full text-left px-4 py-3 hover:bg-red-100 text-red-600"
+            >
+              Cerrar sesión
+            </button>
+
+          </div>
+        )}
       </div>
 
       {/* BUSCADOR */}
@@ -225,7 +253,9 @@ https://curro-chat-nu.vercel.app/
           <div
             key={u.uid}
             onClick={() =>
-              router.push(`/chat?uid=${u.uid}&nombre=${encodeURIComponent(u.nombre)}`)
+              router.push(
+                `/chat?uid=${u.uid}&nombre=${encodeURIComponent(u.nombre)}`
+              )
             }
             className="flex items-center gap-3 bg-white p-4 rounded-xl shadow cursor-pointer text-black"
           >
@@ -249,6 +279,7 @@ https://curro-chat-nu.vercel.app/
           </div>
         ))}
       </div>
+
     </div>
   );
 }
