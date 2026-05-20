@@ -160,7 +160,7 @@ export default function PerfilPage() {
 
       {/* VOLVER */}
       <button
-        onClick={() => router.push("/chat")}
+        onClick={() => router.push("/contacto")}
         className="w-full mt-3 bg-gray-300 text-black p-3 rounded-xl"
       >
         Volver
