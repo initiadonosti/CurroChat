@@ -195,7 +195,6 @@ export default function ChatPage() {
   );
 
   const mensaje = encodeURIComponent(
-    <h1>TEST CAMBIO VERCEL</h1>
     `Hola,
 
 Te invito a usar MiChatApp para comunicarte conmigo.
